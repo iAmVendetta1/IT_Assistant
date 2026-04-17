@@ -1,0 +1,8 @@
+How to check to see if an email was delivered or not to an internal recipient
+
+	1. Access Exchange Admin Center for the client
+	2. Click Mail Flow
+	3. Click Message Trace
+	4. Click Start a trace
+	5. Input relevant information and click Search
+

@@ -1,0 +1,275 @@
+TITLE: General Security Troubleshooting – Accounts, Access, Devices, Email
+VERSION: 1.0
+UPDATED: 2026-02-18
+
+============================================================
+SECTION 1 — ACCOUNT LOCKOUTS
+============================================================
+
+ISSUE: User account keeps locking out.
+CAUSES:
+- Incorrect password saved on device.
+- Old credentials stored in Credential Manager.
+- Mobile device using outdated password.
+- Mapped drives or scheduled tasks using old credentials.
+
+RESOLUTION:
+1. Check lockout source:
+   - Domain Controller → Event Viewer → Windows Logs → Security.
+   - Look for Event ID 4740 (Account Lockout).
+
+2. Clear cached credentials:
+   - Control Panel → Credential Manager → Windows Credentials.
+   - Remove entries for:
+     - MicrosoftOffice16
+     - Outlook
+     - Domain credentials
+
+3. Check mobile devices:
+   - Remove/re-add email account on phone.
+
+4. Check mapped drives:
+   - File Explorer → This PC → Disconnect network drives.
+
+5. Check scheduled tasks:
+   - Task Scheduler → look for tasks running under user’s account.
+
+============================================================
+SECTION 2 — MFA / AUTHENTICATION ISSUES
+============================================================
+
+ISSUE: User cannot complete MFA.
+CAUSES:
+- Authenticator app not registered.
+- Phone number outdated.
+- Push notifications blocked.
+
+RESOLUTION:
+1. Reset MFA:
+   - Admin Center → Azure AD → Users → Authentication Methods.
+   - Delete existing methods → user re-registers.
+
+2. Reinstall Authenticator app:
+   - Remove account → Add account → Scan QR code.
+
+3. Check notification settings:
+   - Ensure app has permission for notifications and background data.
+
+------------------------------------------------------------
+
+ISSUE: User stuck in sign-in loop.
+CAUSES:
+- Corrupt token cache.
+- Browser cookies blocked.
+
+RESOLUTION:
+1. Clear browser cache:
+   - Chrome: Ctrl + Shift + Delete → Clear browsing data.
+
+2. Remove Office tokens:
+   - Close all Office apps.
+   - Delete:
+     %localappdata%\Microsoft\Office\16.0\Identity
+
+3. Sign out/in:
+   - Office app → File → Account → Sign Out → Sign In.
+
+============================================================
+SECTION 3 — CONDITIONAL ACCESS BLOCKS
+============================================================
+
+ISSUE: User blocked by Conditional Access.
+CAUSES:
+- Device not compliant.
+- Location restriction.
+- App restriction.
+
+RESOLUTION:
+1. Check sign-in logs:
+   - Azure AD → Sign-in logs → Status → Failure.
+   - Review “Conditional Access” tab.
+
+2. Fix compliance:
+   - Ensure device is enrolled in Intune.
+   - Company Portal → Check compliance.
+
+3. Check location:
+   - Ensure user is not signing in from blocked country/IP.
+
+============================================================
+SECTION 4 — SUSPICIOUS LOGIN INVESTIGATION
+============================================================
+
+ISSUE: User reports suspicious login alert.
+CAUSES:
+- Impossible travel detection.
+- Password compromise.
+- MFA fatigue attack.
+
+RESOLUTION:
+1. Review sign-in logs:
+   - Azure AD → Sign-in logs → filter by user.
+
+2. Force password reset:
+   - Admin Center → Users → Reset password.
+
+3. Require MFA re-registration:
+   - Azure AD → User → Authentication Methods → Require re-register MFA.
+
+4. Check for risky sign-ins:
+   - Azure AD → Identity Protection → Risky sign-ins.
+
+============================================================
+SECTION 5 — ANTIVIRUS / DEFENDER ISSUES
+============================================================
+
+ISSUE: Defender disabled or not updating.
+CAUSES:
+- Third-party AV installed.
+- Corrupt Defender definitions.
+
+RESOLUTION:
+1. Check Defender status:
+   - Windows Security → Virus & Threat Protection.
+
+2. Update definitions:
+   - PowerShell:
+     Update-MpSignature
+
+3. Re-enable Defender:
+   - Remove third-party AV if not needed.
+
+4. Run Defender scan:
+   - PowerShell:
+     Start-MpScan -ScanType FullScan
+
+============================================================
+SECTION 6 — SMARTSCREEN / APP BLOCKING
+============================================================
+
+ISSUE: SmartScreen blocking application.
+CAUSES:
+- Unknown publisher.
+- File downloaded from internet.
+
+RESOLUTION:
+1. Unblock file:
+   - Right‑click file → Properties → check “Unblock”.
+
+2. Allow app through SmartScreen (admin only):
+   - Windows Security → App & Browser Control → Reputation-based protection → Settings.
+
+3. Add trusted location (Office files):
+   - File → Options → Trust Center → Trust Center Settings → Trusted Locations.
+
+============================================================
+SECTION 7 — BITLOCKER ISSUES
+============================================================
+
+ISSUE: User prompted for BitLocker recovery key.
+CAUSES:
+- TPM reset.
+- BIOS/UEFI changes.
+- Disk moved to another PC.
+
+RESOLUTION:
+1. Retrieve recovery key:
+   - https://aka.ms/myrecoverykey (user login required)
+   - Or: Azure AD → Devices → select device → BitLocker keys.
+
+2. Check TPM status:
+   - tpm.msc → Status should be “Ready for use”.
+
+3. Suspend BitLocker before hardware changes:
+   - Control Panel → BitLocker → Suspend protection.
+
+============================================================
+SECTION 8 — BROWSER SECURITY BLOCKS
+============================================================
+
+ISSUE: Website blocked due to certificate error.
+CAUSES:
+- Expired certificate.
+- Wrong system time.
+- Self-signed certificate.
+
+RESOLUTION:
+1. Check system time:
+   - Right‑click clock → Adjust date/time → Sync now.
+
+2. View certificate:
+   - Click lock icon → Certificate → check expiration.
+
+3. Add trusted root (internal sites only):
+   - mmc → Certificates → Trusted Root Certification Authorities → Import.
+
+============================================================
+SECTION 9 — EMAIL SECURITY ISSUES
+============================================================
+
+ISSUE: User received phishing email.
+CAUSES:
+- Spoofed sender.
+- Compromised account.
+
+RESOLUTION:
+1. Report phishing:
+   - Outlook → Report Message → Phishing.
+
+2. Block sender:
+   - Outlook → Home → Junk → Block Sender.
+
+3. Check sign-in logs for compromise.
+
+------------------------------------------------------------
+
+ISSUE: Attachment blocked by Outlook.
+CAUSES:
+- Unsafe file type.
+- Security policy.
+
+RESOLUTION:
+1. Compress file:
+   - Zip file → send again.
+
+2. Upload to OneDrive/SharePoint and share link.
+
+============================================================
+SECTION 10 — CERTIFICATE / SSL ISSUES
+============================================================
+
+ISSUE: Application not trusting certificate.
+CAUSES:
+- Missing root certificate.
+- Expired certificate.
+
+RESOLUTION:
+1. Import certificate:
+   - mmc → Certificates → Local Computer → Trusted Root Certification Authorities → Import.
+
+2. Check expiration:
+   - certmgr.msc → Personal → Certificates.
+
+============================================================
+SECTION 11 — COMMON ADMIN TASKS
+============================================================
+
+TASK: Force password reset.
+STEPS:
+1. Admin Center → Users → Reset password.
+
+------------------------------------------------------------
+
+TASK: Require MFA re-registration.
+STEPS:
+1. Azure AD → User → Authentication Methods → Require re-register MFA.
+
+------------------------------------------------------------
+
+TASK: Check user sign-in history.
+STEPS:
+1. Azure AD → Sign-in logs → filter by user.
+
+============================================================
+END OF DOCUMENT
+============================================================

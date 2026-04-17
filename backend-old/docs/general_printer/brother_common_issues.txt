@@ -1,0 +1,58 @@
+Title: Common Brother Printer Issues and Troubleshooting Steps
+
+Overview:
+This document covers common issues seen in Brother HL, MFC, and DCP series printers, along with recommended fixes.
+
+1. “Replace Toner” Message After Installing New Cartridge
+Symptoms:
+- Printer still shows “Replace Toner”
+- Cannot print despite new cartridge
+
+Resolution:
+- Open the front cover and leave it open
+- Press the Clear/Back button
+- Select the correct toner reset option for the installed cartridge
+- Close the cover and test print
+
+2. Wi‑Fi Connection Drops Frequently
+Symptoms:
+- Printer disappears from network
+- Jobs fail intermittently
+
+Resolution:
+- Assign a static IP address in the router
+- Ensure the printer is on 2.4 GHz, not 5 GHz
+- Move the printer closer to the access point
+- Update printer firmware
+
+3. Ghosting or Faint Duplicate Images
+Symptoms:
+- Light duplicate text or images appear lower on the page
+
+Resolution:
+- Replace the drum unit
+- Ensure toner is genuine Brother brand
+- Disable “Toner Save Mode” in printer settings
+
+4. Unable to Scan to PC
+Symptoms:
+- “No PC Found”
+- Scan button does nothing
+
+Resolution:
+- Ensure Brother ControlCenter is installed and running
+- Confirm the PC and printer are on the same network
+- Re‑add the scanner using Brother Utilities
+- Temporarily disable firewall to test connectivity
+
+5. Paper Not Feeding Properly
+Symptoms:
+- Printer pulls multiple sheets
+- Printer fails to pick up paper
+
+Resolution:
+- Remove paper and fan the stack
+- Clean feed rollers with a lint‑free cloth
+- Replace worn rollers if feeding issues continue
+
+End of Document.

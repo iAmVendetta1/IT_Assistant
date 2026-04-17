@@ -1,0 +1,283 @@
+TITLE: Microsoft Outlook Troubleshooting – General Software
+VERSION: 1.0
+UPDATED: 2026-02-18
+
+============================================================
+SECTION 1 — OUTLOOK VIEW / LAYOUT ISSUES
+============================================================
+
+ISSUE: Outlook view looks “weird” or layout is incorrect.
+CAUSES:
+- Custom view corruption.
+- Reading Pane disabled.
+- “Use Tighter Spacing” enabled.
+- Columns or sorting changed.
+
+RESOLUTION:
+1. Reset the current folder view:
+   - Outlook → View tab → Reset View.
+
+2. Re-enable Reading Pane:
+   - View → Layout → Reading Pane → select “Right”.
+   - If user prefers bottom: “Bottom”.
+
+3. Disable tighter spacing:
+   - View → Layout → uncheck “Use Tighter Spacing”.
+
+4. Reset all views (global reset):
+   - Close Outlook.
+   - Windows key + R → run:
+     outlook.exe /cleanviews
+
+5. Reset Navigation Pane:
+   - Windows key + R → run:
+     outlook.exe /resetnavpane
+
+------------------------------------------------------------
+
+ISSUE: Messages appear grouped, sorted oddly, or missing columns.
+CAUSES:
+- Group By enabled.
+- Sorting changed.
+- Columns removed.
+
+RESOLUTION:
+1. Disable Group By:
+   - View → View Settings → Group By → uncheck “Automatically group”.
+
+2. Reset sorting:
+   - View → Arrange By → Date.
+
+3. Restore default columns:
+   - View → View Settings → Columns → Add “From”, “Subject”, “Received”.
+
+============================================================
+SECTION 2 — OUTLOOK WILL NOT OPEN
+============================================================
+
+ISSUE: Outlook does not launch or crashes on startup.
+CAUSES:
+- Corrupt profile.
+- Faulty add‑ins.
+- Navigation Pane corruption.
+
+RESOLUTION:
+1. Start Outlook in Safe Mode:
+   - Windows key + R → outlook.exe /safe
+   - If it opens, disable add‑ins:
+     File → Options → Add‑ins → Manage COM Add‑ins → Go → uncheck all.
+
+2. Reset Navigation Pane:
+   - Windows key + R → outlook.exe /resetnavpane
+
+3. Create a new profile:
+   - Control Panel → Mail → Show Profiles → Add.
+   - Set “Always use this profile”.
+
+4. Repair Office:
+   - Control Panel → Programs → Microsoft Office → Change → Quick Repair.
+
+============================================================
+SECTION 3 — AUTODISCOVER / SIGN-IN ISSUES
+============================================================
+
+ISSUE: Outlook keeps prompting for password or won’t sign in.
+CAUSES:
+- AutoDiscover misrouting.
+- Cached credentials.
+- Registry misconfiguration.
+
+RESOLUTION:
+1. Clear cached credentials:
+   - Control Panel → Credential Manager → Windows Credentials.
+   - Remove entries for:
+     - Outlook
+     - MicrosoftOffice16
+     - MicrosoftAccount
+
+2. Force correct AutoDiscover behavior (registry fix):
+   - Windows key + R → regedit.
+   - Navigate to:
+     HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Outlook\AutoDiscover
+   - Create DWORD (32‑bit):
+     ExcludeExplicitO365Endpoint = 1
+   - Restart Outlook.
+
+3. Test AutoDiscover:
+   - Hold Ctrl → right‑click Outlook icon in system tray → Test Email AutoConfiguration.
+   - Uncheck “Use Guessmart”.
+   - Verify correct XML loads.
+
+4. Recreate Outlook profile if AutoDiscover is correct but profile is corrupt.
+
+============================================================
+SECTION 4 — SEARCH NOT WORKING
+============================================================
+
+ISSUE: Outlook search returns no results or incomplete results.
+CAUSES:
+- Search index corruption.
+- OST not indexed.
+- Windows Search service stopped.
+
+RESOLUTION:
+1. Rebuild Windows Search index:
+   - Control Panel → Indexing Options → Advanced → Rebuild.
+
+2. Ensure OST is indexed:
+   - Control Panel → Indexing Options → Modify.
+   - Ensure Outlook is checked.
+
+3. Restart Windows Search service:
+   - Services.msc → Windows Search → Restart.
+
+4. Repair OST file:
+   - Close Outlook.
+   - Navigate to:
+     %localappdata%\Microsoft\Outlook
+   - Rename OST file → Outlook will rebuild it.
+
+============================================================
+SECTION 5 — SEND/RECEIVE FAILURES
+============================================================
+
+ISSUE: Outlook stuck on “Disconnected”, “Trying to connect”, or “Need Password”.
+CAUSES:
+- Network issues.
+- Authentication failure.
+- Corrupt profile.
+
+RESOLUTION:
+1. Test connectivity:
+   - Ping outlook.office365.com
+   - Test in browser: https://outlook.office.com
+
+2. Restart Outlook authentication:
+   - File → Office Account → Sign Out → Sign In.
+
+3. Reset credentials:
+   - Credential Manager → remove Outlook/Microsoft entries.
+
+4. Create new profile if issue persists.
+
+------------------------------------------------------------
+
+ISSUE: Emails stuck in Outbox.
+CAUSES:
+- Large attachment.
+- Offline mode.
+- Corrupt Outbox.
+
+RESOLUTION:
+1. Check if Outlook is offline:
+   - Send/Receive tab → ensure “Work Offline” is NOT highlighted.
+
+2. Delete or reduce attachment size.
+
+3. Move stuck email to Drafts → reopen → send again.
+
+============================================================
+SECTION 6 — OST / PST CORRUPTION
+============================================================
+
+ISSUE: Outlook slow, freezing, or not syncing.
+CAUSES:
+- Corrupt OST.
+- Oversized OST/PST.
+
+RESOLUTION:
+1. Repair OST:
+   - Close Outlook.
+   - Navigate to:
+     %localappdata%\Microsoft\Outlook
+   - Rename OST → Outlook rebuilds it.
+
+2. Run Inbox Repair Tool (PST only):
+   - Navigate to:
+     C:\Program Files\Microsoft Office\root\Office16\
+   - Run: SCANPST.EXE
+
+3. Reduce mailbox size:
+   - Empty Deleted Items.
+   - Archive old mail.
+
+============================================================
+SECTION 7 — ADD-IN ISSUES
+============================================================
+
+ISSUE: Outlook slow or freezing.
+CAUSES:
+- Faulty add‑ins (Teams, Zoom, CRM, antivirus).
+
+RESOLUTION:
+1. Disable add‑ins:
+   - File → Options → Add‑ins → Manage COM Add‑ins → Go.
+   - Uncheck all → restart Outlook.
+   - Re-enable one at a time to find culprit.
+
+============================================================
+SECTION 8 — SHARED MAILBOX ISSUES
+============================================================
+
+ISSUE: Shared mailbox not appearing.
+CAUSES:
+- Missing permissions.
+- Auto-mapping disabled.
+- Profile corruption.
+
+RESOLUTION:
+1. Verify permissions:
+   - Admin Center → Exchange → Mailboxes → Shared → Permissions.
+   - Ensure user has:
+     - Full Access
+     - Send As (if needed)
+
+2. Remove/re-add permissions to trigger auto-mapping.
+
+3. Manually add mailbox:
+   - File → Account Settings → Account Settings → Change → More Settings → Advanced → Add.
+
+============================================================
+SECTION 9 — CALENDAR ISSUES
+============================================================
+
+ISSUE: Meeting invites not showing in calendar.
+CAUSES:
+- Rules moving invites.
+- Corrupt view.
+- Delegate issues.
+
+RESOLUTION:
+1. Check rules:
+   - File → Manage Rules & Alerts.
+
+2. Reset calendar view:
+   - Go to Calendar → View → Reset View.
+
+3. Check delegate settings:
+   - File → Account Settings → Delegate Access.
+
+============================================================
+SECTION 10 — COMMON ADMIN TASKS
+============================================================
+
+TASK: Start Outlook with troubleshooting switches.
+STEPS:
+1. Windows key + R → run:
+   outlook.exe /safe
+   outlook.exe /cleanviews
+   outlook.exe /resetnavpane
+   outlook.exe /profiles
+
+------------------------------------------------------------
+
+TASK: Recreate Outlook profile.
+STEPS:
+1. Close Outlook.
+2. Control Panel → Mail → Show Profiles → Add.
+3. Configure account.
+4. Set “Always use this profile”.
+
+============================================================
+END OF DOCUMENT
+============================================================

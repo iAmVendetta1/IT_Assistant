@@ -1,0 +1,15 @@
+/* Reset root so our layout controls centering */
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  background: #3a5b91;
+}
+
+/* Make the page background consistent */
+body {
+  margin: 0;
+  background: #3a5b91;
+  font-family: sans-serif;
+}

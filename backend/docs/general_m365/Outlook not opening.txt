@@ -1,0 +1,9 @@
+If Outlook isn't opening or it opens but immediately crashes, I have found that disabling the Teams add-in can resolve this. 
+
+1. CTRL + R or search "run" and hit enter. 
+2. Type in "Outlook.exe /safe" (without the quotation marks)
+3. This opens Outlook with all add-ins disabled. 
+4. File > Options > Com Add-ins > Click Go > Uncheck Teams Add-in. 
+5. Close and attempt to reopen Outlook. 
+
+It should open this time. 

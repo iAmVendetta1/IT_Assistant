@@ -1,0 +1,5 @@
+Adjusting Programmable Keys in Allworx PBX 731 for Allworx 9312
+
+1. Phone System > Handsets
+2. Search the extension, then click View Configuration
+3. Under the Programmable Function Keys section, click modify and set the buttons to match preferences or nearby colleagues. 

@@ -1,0 +1,13 @@
+App installer:
+https://getcseapp.sonicwall.com/download_app/
+
+CSE Invite Code: 
+
+1. Go to MySonicWall and Login 
+2. At the bottom of the left side navigation, expand "Services" and click "Available Services"
+3. Open Capture Security Center.
+4. Select the Client from the dropdown in the top left.
+5. Click Cloud Secure Edge.
+6. Invite Code is in the top right-hand corner. (Usually cse-clientname)
+
+Optionally, you can click "Back to MSP Console" in the bottom left to view all Invite Codes

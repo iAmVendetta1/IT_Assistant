@@ -1,0 +1,7 @@
+Add user to an extension or queue that doesn't show up in queue dropdown in Allworx PBX 731
+
+Get the extension that they test the queue call at. 
+As an example, for PBO, they advised they test the queue with *76000. 
+Sign into Allworx 731 PBX, Phone System, Extensions > search 6000.
+Click view next to the extension, then click modify next to "On calls from all other callers" and add the user to the list of First Connection Attempts.
+Now, the new user will ring alongside everyone else when extension 6000 is dialed or transferred to. 
