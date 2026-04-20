@@ -1,37 +1,56 @@
 import { useState, useRef, useEffect } from "react";
 import { askQuestion } from "./api";
 
+// Animated dots component
+function ThinkingDots() {
+  const [dots, setDots] = useState("");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length < 3 ? prev + "." : ""));
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span>{dots}</span>;
+}
+
 function App() {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const chatRef = useRef(null);
 
   useEffect(() => {
-  if (chatRef.current) {
-    chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }
-}, [messages]);
-
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
   async function handleAsk() {
     if (!question.trim()) return;
 
     const userMessage = question;
-    setQuestion(""); //Clear message field
+    setQuestion("");
 
-    // Add user message to history
+    // Add user message
     setMessages((prev) => [
       ...prev,
-      { role: "user", content: question }
+      { role: "user", content: userMessage }
     ]);
+
+    setIsLoading(true);
 
     const result = await askQuestion([
       ...messages,
-      { role: "user", content: question }
-    ])
+      { role: "user", content: userMessage }
+    ]);
 
-    // Add assistant message to history
+    setIsLoading(false);
+
+    // Add assistant message
     setMessages((prev) => [
       ...prev,
       {
@@ -56,7 +75,6 @@ function App() {
         padding: "2rem"
       }}
     >
-      
       <div
         style={{
           width: "100%",
@@ -75,9 +93,7 @@ function App() {
           style={{
             color: "white",
             textAlign: "center",
-            padding: "0px",
-            margin: "0px",
-            marginBottom: "2rem",
+            margin: "0 0 2rem 0",
             fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
             fontWeight: 600
           }}
@@ -109,11 +125,7 @@ function App() {
         >
           {messages.map((msg, i) =>
             msg.role === "user" ? (
-              // USER BUBBLE
-              <div
-                key={i}
-                style={{ display: "flex", justifyContent: "flex-end" }}
-              >
+              <div key={i} style={{ display: "flex", justifyContent: "flex-end" }}>
                 <div
                   style={{
                     maxWidth: "80%",
@@ -130,11 +142,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              // ASSISTANT BUBBLE
-              <div
-                key={i}
-                style={{ display: "flex", justifyContent: "flex-start" }}
-              >
+              <div key={i} style={{ display: "flex", justifyContent: "flex-start" }}>
                 <div
                   style={{
                     maxWidth: "80%",
@@ -147,12 +155,8 @@ function App() {
                     lineHeight: "1.5"
                   }}
                 >
+                  <div style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
 
-                  <div style={{ whiteSpace: "pre-wrap" }}>
-                    {msg.content}
-                  </div>
-
-                  {/* Metadata */}
                   {msg.meta && (
                     <div
                       style={{
@@ -175,6 +179,26 @@ function App() {
               </div>
             )
           )}
+
+          {/* Thinking Indicator */}
+          {isLoading && (
+            <div style={{ display: "flex", justifyContent: "flex-start" }}>
+              <div
+                style={{
+                  maxWidth: "80%",
+                  background: "#0f141f",
+                  color: "#ffffff",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "16px",
+                  borderBottomLeftRadius: "4px",
+                  fontSize: "0.95rem",
+                  lineHeight: "1.5"
+                }}
+              >
+                Thinking<ThinkingDots />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Input Area */}
@@ -188,16 +212,17 @@ function App() {
               border: "1px solid #696767",
               background: "#0f141f",
               color: "white",
-              resize: "none", // ← prevents dragging to resize
-              minHeight: "40px", // ← input height
-              maxHeight: "100px", // ← grows but not too much
-              overflowY: "auto", // ← scrolls when too tall
+              resize: "none",
+              minHeight: "40px",
+              maxHeight: "100px",
+              overflowY: "auto",
               lineHeight: "1.4"
             }}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
+                e.preventDefault();
                 handleAsk();
               }
             }}
@@ -206,15 +231,16 @@ function App() {
 
           <button
             onClick={handleAsk}
+            disabled={isLoading}
             style={{
               marginLeft: "1rem",
               padding: "12px 20px",
               fontSize: "1rem",
               borderRadius: "8px",
               border: "none",
-              background: "#0f141f",
+              background: isLoading ? "#333" : "#0f141f",
               color: "white",
-              cursor: "pointer"
+              cursor: isLoading ? "not-allowed" : "pointer"
             }}
           >
             Send
