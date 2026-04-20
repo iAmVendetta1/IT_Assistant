@@ -89,11 +89,6 @@ Answer (include all relevant information from the context):
 
         # 3. Retrieve chunks
         chunks, metadatas = self._retrieve_relevant_chunks(latest_user, collection, n_results=10)
-        
-        # DEBUG: Print what was retrieved
-        print(f"DEBUG - Retrieved {len(chunks)} chunks:")
-        for i, chunk in enumerate(chunks):
-            print(f"Chunk {i}: {chunk[:200]}...")  # Show first 200 chars
 
         # 4. Build prompt with history + context
         prompt = self._build_prompt(messages, chunks, latest_user)
