@@ -1,5 +1,5 @@
 import numpy as np
-from app.ingestion import embed
+from app.ingestion.pipeline.processor import embed
 
 # ---------------------------------------
 # Keyword routing rules
@@ -66,12 +66,17 @@ def compute_centroids(collections):
 def route_collection(question, collections, centroids):
     q = question.lower()
 
-    # 1. Keyword routing for well-defined domains
+    # 1. Keyword routing
     for domain, keywords in domain_keywords.items():
         if any(k in q for k in keywords):
-            return collections[domain]
+            # If the domain exists as a collection, use it
+            if domain in collections:
+                return collections[domain]
 
-    # 2. Semantic routing (for client collections and general fallback)
+            # No hard-coded general_it anymore — just fall back
+            return next(iter(collections.values()))
+
+    # 2. Semantic routing
     q_emb = np.array(embed([question])[0])
     best_collection = None
     best_score = -1
@@ -82,5 +87,9 @@ def route_collection(question, collections, centroids):
             best_score = score
             best_collection = name
 
-    return collections[best_collection]
+    # Final fallback
+    if best_collection in collections:
+        return collections[best_collection]
+
+    return next(iter(collections.values()))
 

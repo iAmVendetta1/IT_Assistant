@@ -1,0 +1,47 @@
+Microsoft Phone Activation Support
+
+This policy applies to all Microsoft Windows and Office products sold by SoftwareDeals that support activation by phone.
+Purpose
+
+This policy explains when and how customers may use Microsoft’s phone-based activation process to validate their licensed Microsoft software purchased from SoftwareDeals. Our goal is to ensure every customer has a genuine, fully functional product that successfully activates through Microsoft’s official systems.
+
+Overview
+
+Microsoft provides two activation methods for most Windows and Office products:
+1. Online activation through Microsoft’s activation servers, and
+2. Phone activation through the Microsoft Activation Center.
+Both methods confirm the authenticity of your product key directly with Microsoft. Phone activation remains a supported option within the United States for legitimate retail and volume-based product keys.
+
+When to Use Phone Activation
+
+Customers should use Microsoft’s phone activation system if:
+· Online activation fails, system is not connected to internet source, or times out due to network or server issues.
+· A major hardware change (for example, motherboard replacement) prevents automatic reactivation.
+· The product key was previously activated on another device but is now being moved to a new system (permitted under retail licensing).
+· You receive an error stating that the key cannot be validated online.
+
+How to Activate by Phone
+1. Open Settings → System → Activation.
+2. Select Troubleshoot, then Activate by phone (option appears if online activation fails).
+3. Record the Installation ID displayed on screen.
+4. Call the official Microsoft Activation Center for the U.S. at 1-888-352-7140.
+5. Follow the automated prompts.
+6. Enter the Installation ID when prompted.
+7. Microsoft will provide a Confirmation ID.
+8. Enter it in the activation window to complete the process.
+Once complete, Windows will display “Windows is activated with a digital license.”
+
+Important Notes
+· Only Microsoft can approve or deny phone activations. SoftwareDeals does not control or influence Microsoft’s activation servers.
+· This feature applies only to retail, volume, and transferable licenses.
+· OEM (System Builder) keys cannot be activated by phone.
+· If you have purchased your product from SoftwareDeals and both online and phone activation fail, SoftwareDeals guarantees to provide a replacement product key that activates successfully, for as long as the manufacturer supports the product.
+Customer Support
+If you encounter any issue during the phone activation process:
+· Contact SoftwareDeals Licensing Support at support@SoftwareDeals.com or (800) 983-2471.
+· Provide your order number and a brief description of the activation issue (including any error codes).
+· Our team will verify your license and guide you through reactivation or issue a new key if necessary.
+SoftwareDeals Guarantee
+SoftwareDeals stands behind every license it sells. We guarantee that every Microsoft product key provided:
+· Activates successfully through Microsoft’s legitimate online or phone systems, and
+· Remains valid for the life of the product as long as the manufacturer continues support.

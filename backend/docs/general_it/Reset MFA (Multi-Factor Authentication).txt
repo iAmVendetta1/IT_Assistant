@@ -1,0 +1,24 @@
+In the Entra Admin Center
+	1. Go to https://entra.microsoft.com
+	2. In the left navigation, open Entra ID (This is the “Identity” section — just renamed)
+	3. Select Users
+	4. Choose the user you want to reset MFA for
+	5. Open Authentication methods
+	6. Select Require re-register MFA or delete their existing methods
+
+Step 1: Set up the Microsoft Authenticator app (recommended)
+They will be guided through:
+	• Installing Microsoft Authenticator on their phone
+	• Opening the app and choosing Add account → Work or school
+	• Scanning the QR code shown on their computer screen
+Once scanned, the app will show a 6‑digit code or push notifications.
+They click Next to verify.
+Step 2: Add a backup method (phone or SMS)
+Microsoft will ask them to add a second method, such as:
+	• Phone call
+	• Text message
+	• Alternate email (if allowed by your org)
+They follow the prompts and verify the code sent to their phone.
+Final Step: MFA setup complete
+Once both methods are verified, they click Done and are taken into their account.
+

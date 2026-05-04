@@ -1,0 +1,7 @@
+1. Sign in to Proofpoint at: https://us1.proofpointessentials.com/app/login.php
+2. Select the Client from the list or search in the top right. 
+3. Expand the Email dropdown in the left-hand navigation pane. 
+4. Click Allow List.
+5. Click Add Allow Entry in the top right-hand corner.
+6. Enter Email address, IP, or domain. 
+7. Click Save.

@@ -1,20 +1,24 @@
+import {
+  createConversation,
+  fetchConversations,
+  fetchConversation,
+  sendMessage,
+  askQuestion,
+  deleteConversationAPI,
+  renameConversationAPI
+} from "./api";
+
 import { useState, useRef, useEffect } from "react";
-import { askQuestion } from "./api";
 
 function generateTitleFromMessage(message) {
   const trimmed = message.trim();
   if (!trimmed) return null;
 
-  // Limit to 50 chars
   let title = trimmed.length > 50 ? trimmed.slice(0, 50) + "…" : trimmed;
-
-  // Capitalize first letter
   title = title.charAt(0).toUpperCase() + title.slice(1);
-
   return title;
 }
 
-// Animated dots component
 function ThinkingDots() {
   const [dots, setDots] = useState("");
 
@@ -31,66 +35,67 @@ function ThinkingDots() {
 
 function App() {
   const [question, setQuestion] = useState("");
-
-  // Conversations stored as:
-  // { id: { title: string, messages: [] } }
   const [conversations, setConversations] = useState({});
   const [activeId, setActiveId] = useState(null);
-
   const [isLoading, setIsLoading] = useState(false);
 
   const chatRef = useRef(null);
 
-  // Load conversations from localStorage on mount
+  // ------------------------------------------------------------
+  // Load conversation list from backend
+  // ------------------------------------------------------------
   useEffect(() => {
-    const savedRaw = localStorage.getItem("dcc_conversations");
+    async function load() {
+      const list = await fetchConversations();
 
-    if (savedRaw) {
-      try {
-        const saved = JSON.parse(savedRaw);
-        const convos = saved.conversations || {};
-        const ids = Object.keys(convos);
+      // Convert array → object keyed by ID
+      const obj = {};
+      for (const c of list) {
+        obj[c.id] = {
+          title: c.title,
+          created_at: c.created_at,
+          messages: [] // messages loaded later
+        };
+      }
 
-        if (ids.length > 0) {
-          setConversations(convos);
-          setActiveId(saved.activeId && convos[saved.activeId] ? saved.activeId : ids[0]);
-          return;
-        }
-      } catch (e) {
-        console.warn("Failed to parse saved conversations, starting fresh.", e);
+      setConversations(obj);
+
+      if (list.length > 0) {
+        setActiveId(list[0].id);
       }
     }
 
-    // Fallback: no valid saved data → create a fresh conversation
-    const id = crypto.randomUUID();
-    const timestamp = new Date().toLocaleString();
-    setConversations({
-      [id]: {
-        title: `Conversation – ${timestamp}`,
-        timestamp,
-        messages: []
-      }
-    });
-    setActiveId(id);
+    load();
   }, []);
 
-
-  // Ensure an active conversation always exists
+  // ------------------------------------------------------------
+  // Load messages when activeId changes
+  // ------------------------------------------------------------
   useEffect(() => {
-    if (!activeId && Object.keys(conversations).length > 0) {
-      setActiveId(Object.keys(conversations)[0]);
+    async function load() {
+      if (!activeId) return;
+
+      try {
+        const data = await fetchConversation(activeId);
+
+        setConversations(prev => ({
+          ...prev,
+          [activeId]: {
+            ...prev[activeId],
+            messages: data.messages
+          }
+        }));
+      } catch (err) {
+        console.error("Failed to load conversation", err);
+      }
     }
-  }, [conversations, activeId]);
 
-  // Save conversations to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem(
-      "dcc_conversations",
-      JSON.stringify({ conversations, activeId })
-    );
-  }, [conversations, activeId]);
+    load();
+  }, [activeId]);
 
+  // ------------------------------------------------------------
   // Auto-scroll chat
+  // ------------------------------------------------------------
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -99,106 +104,113 @@ function App() {
 
   const messages = conversations[activeId]?.messages || [];
 
-  function newConversation() {
-    const id = crypto.randomUUID();
-    const timestamp = new Date().toLocaleString();
+  // ------------------------------------------------------------
+  // Create a new conversation
+  // ------------------------------------------------------------
+  async function newConversation() {
+    const convo = await createConversation(); // { id, title }
 
-    setConversations((prev) => ({
+    setConversations(prev => ({
       ...prev,
-      [id]: {
-  title: `Conversation – ${timestamp}`,
-  timestamp,
-  messages: []
-    }
+      [convo.id]: {
+        title: convo.title,
+        created_at: new Date().toISOString(),
+        messages: []
+      }
     }));
 
-    setActiveId(id);
+    setActiveId(convo.id);
   }
 
-  function deleteConversation(id) {
-  setConversations((prev) => {
-    const updated = { ...prev };
-    delete updated[id];
+  // ------------------------------------------------------------
+  // Delete a conversation
+  // ------------------------------------------------------------
+  async function deleteConversation(id) {
+    await deleteConversationAPI(id);
 
-    const remainingIds = Object.keys(updated);
+    setConversations(prev => {
+      const updated = { ...prev };
+      delete updated[id];
 
-    if (id === activeId) {
-      if (remainingIds.length > 0) {
-        setActiveId(remainingIds[0]);
-      } else {
-        const newId = crypto.randomUUID();
-        const timestamp = new Date().toLocaleString();
-        updated[newId] = {
-          title: `Conversation – ${timestamp}`,
-          timestamp,
-          messages: []
-        };
-        setActiveId(newId);
-      }
+      const remaining = Object.keys(updated);
+      setActiveId(remaining.length > 0 ? remaining[0] : null);
+
+      return updated;
+    });
+  }
+
+  // ------------------------------------------------------------
+  // Rename a conversation
+  // ------------------------------------------------------------
+  async function renameConversation(id, newTitle) {
+  const updated = await renameConversationAPI(id, newTitle);
+
+  setConversations(prev => ({
+    ...prev,
+    [id]: {
+      ...prev[id],
+      title: updated.title
     }
-
-    return updated;
-  });
+  }));
 }
 
-
+  // ------------------------------------------------------------
+  // Handle asking a question
+  // ------------------------------------------------------------
   async function handleAsk() {
     if (!question.trim()) return;
 
-    // If somehow no active conversation, create one on the fly
-    if (!activeId) {
-      const id = crypto.randomUUID();
-      const timestamp = new Date().toLocaleString();
+    let conversationId = activeId;
 
-      setConversations((prev) => ({
+    // If no conversation exists, create one
+    if (!conversationId) {
+      const convo = await createConversation();
+      conversationId = convo.id;
+
+      setConversations(prev => ({
         ...prev,
-        [id]: { title: `Conversation – ${timestamp}`, messages: [] }
+        [conversationId]: {
+          title: convo.title,
+          created_at: new Date().toISOString(),
+          messages: []
+        }
       }));
 
-      setActiveId(id);
-      return;
+      setActiveId(conversationId);
     }
-
 
     const userMessage = question;
     setQuestion("");
 
-    // Add user message
-    setConversations((prev) => {
-      const convo = prev[activeId];
-      const isFirstMessage = convo.messages.length === 0;
+    // Add user message locally
+    setConversations(prev => ({
+      ...prev,
+      [conversationId]: {
+        ...prev[conversationId],
+        messages: [
+          ...prev[conversationId].messages,
+          { role: "user", content: userMessage }
+        ]
+      }
+    }));
 
-      const newTitle = isFirstMessage
-        ? `${generateTitleFromMessage(userMessage)} – ${convo.timestamp}`
-        : convo.title;
-
-      return {
-        ...prev,
-        [activeId]: {
-          ...convo,
-          title: newTitle || convo.title,
-          messages: [...convo.messages, { role: "user", content: userMessage }]
-        }
-      };
-    });
-
+    // Save user message to backend
+    await sendMessage(conversationId, "user", userMessage);
 
     setIsLoading(true);
 
-    const result = await askQuestion([
-      ...messages,
-      { role: "user", content: userMessage }
-    ]);
+    // Ask backend for assistant response
+    const result = await askQuestion(conversationId, userMessage);
 
     setIsLoading(false);
 
-    // Add assistant message
-    setConversations((prev) => ({
+    // Add assistant message locally
+    setConversations(prev => ({
       ...prev,
-      [activeId]: {
-        ...prev[activeId],
+      [conversationId]: {
+        ...prev[conversationId],
         messages: [
-          ...prev[activeId].messages,
+          ...prev[conversationId].messages,
           {
             role: "assistant",
             content: result.answer,
@@ -210,7 +222,15 @@ function App() {
         ]
       }
     }));
+
+    // Save assistant message to backend
+    await sendMessage(conversationId, "assistant", result.answer);
   }
+
+
+  // ------------------------------------------------------------
+  // UI
+  // ------------------------------------------------------------
 
   return (
     <div
@@ -272,7 +292,16 @@ function App() {
                 border: id === activeId ? "1px solid rgba(255,255,255,0.2)" : "none"
               }}
             >
-              <div onClick={() => setActiveId(id)} style={{ flex: 1 }}>
+              <div
+                onClick={() => setActiveId(id)}
+                onDoubleClick={() => {
+                  const newTitle = prompt("Rename conversation:", convo.title);
+                  if (newTitle && newTitle.trim()) {
+                    renameConversation(id, newTitle.trim());
+                  }
+                }}
+                style={{ flex: 1 }}
+              >
                 {convo.title}
               </div>
 

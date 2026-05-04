@@ -1,7 +1,0 @@
-If we are unable to connect to an online device via Datto RMM, we can have the user perform the following steps to possibly repair the connection. 
-
-1. In the far right section of the taskbar at the bottom of the screen, click the up carat. (The same character as if you were to press SHIFT + 6)
-2. Right click the blue circle with a single squiggly white line. 
-3. Click restart. 
-
-After a few moments, reattempt connection. 

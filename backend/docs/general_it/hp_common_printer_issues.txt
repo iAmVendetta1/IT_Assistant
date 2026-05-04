@@ -1,0 +1,60 @@
+Title: Common HP Printer Issues and How to Resolve Them
+
+Overview:
+This document summarizes frequent problems encountered with HP LaserJet and OfficeJet printers, along with recommended solutions.
+
+1. “Paper Size Mismatch” Errors
+Symptoms:
+- Printer requests 8.5x14 even when printing Letter
+- Jobs pause until user confirms paper size
+
+Resolution:
+- Verify paper size in the print dialog
+- Ensure the tray is configured for Letter in the printer menu
+- Disable “Use Printer Settings” in the driver
+- Reinstall the HP PCL6 driver if mismatch persists
+
+2. Slow Printing or Long Delays
+Symptoms:
+- Jobs take 20–30 seconds before printing begins
+
+Resolution:
+- Disable “Print in Best Quality” mode
+- Switch from WSD to TCP/IP port
+- Update the HP driver to the latest version
+- Check for large spool files caused by PDFs
+
+3. Streaks or Faded Prints
+Symptoms:
+- Light text
+- Horizontal streaks
+- Uneven toner distribution
+
+Resolution:
+- Remove and gently shake the toner cartridge
+- Run the Cleaning Page from the printer menu
+- Replace the imaging drum if streaks remain
+
+4. Scan to Email or Network Folder Fails
+Symptoms:
+- “Cannot connect to server”
+- “Authentication failed”
+
+Resolution:
+- Verify SMTP or SMB credentials
+- Ensure the printer has correct DNS settings
+- Confirm the service account password is valid
+- Test using a different destination folder
+
+5. Frequent Paper Jams
+Symptoms:
+- Jams in Tray 2 or duplexer
+- Printer stops mid‑page
+
+Resolution:
+- Remove all paper and check for scraps
+- Clean or replace feed rollers
+- Ensure paper is not curled or damp
+- Inspect duplexer for obstructions
+
+End of Document.

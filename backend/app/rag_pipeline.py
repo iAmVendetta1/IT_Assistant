@@ -1,9 +1,13 @@
 from typing import List, Dict
 import requests
+from app.ingestion.pipeline.embedder import embed
 
 from app.config import OLLAMA_URL, GENERATION_MODEL
 from app.routing import route_collection
-from app.ingestion import embed
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from app.db.database import AsyncSessionLocal
 
 class DCCAssistant:
     def __init__(self, collections, centroids):
@@ -23,8 +27,9 @@ class DCCAssistant:
 
     # ---- Retrieval ----
     def _retrieve_relevant_chunks(self, query: str, collection, n_results: int = 5):
+        query_embedding = embed([query])[0]
         results = collection.query(
-            query_texts=[query],
+            query_embeddings=[query_embedding],
             n_results=n_results
         )
         documents = results["documents"][0]
@@ -45,9 +50,13 @@ class DCCAssistant:
         prompt = f"""
 You are a helpful IT support assistant. Answer the user's question using ONLY the information provided in the context below.
 
-The context provided is COMPLETE and AUTHORITATIVE. All necessary information is included.
+Use the context **only when it is relevant to the user's latest question**. 
+If the context contains unrelated information, ignore it.
 
-Provide the COMPLETE answer with ALL relevant details from the context exactly as presented. Do not filter, omit, or reorganize information based on your interpretation.
+Do NOT add extra details that the user did not ask for. 
+Do NOT answer questions that were not asked.
+
+Do not filter, omit, or reorganize information based on your interpretation.
 
 Preserve any structure from the context (lists, steps, procedures) exactly as it appears.
 
@@ -62,12 +71,19 @@ User's latest question:
 
 ---
 
-Answer (include all relevant information from the context):
+Answer:
 """.strip()
         return prompt
 
     # ---- Main entrypoint ----
     def ask(self, messages: List[Dict[str, str]]):
+        # If no collections exist yet, just return a simple response
+        if not self.collections:
+            return {
+                "answer": "No information is available to answer your question yet.",
+                "collection": "none",
+                "sources": []
+            }
         # 1. Get latest user message
         latest_user = next(
             (m["content"] for m in reversed(messages) if m["role"] == "user"),

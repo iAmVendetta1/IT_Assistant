@@ -8,7 +8,12 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
 
+class AskRequest(BaseModel):
+    message: str
+
 class AnswerResponse(BaseModel):
     answer: str
     collection: str
     sources: List[str]
+
+

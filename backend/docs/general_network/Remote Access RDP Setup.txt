@@ -1,9 +1,0 @@
-Enable the following on the RDP Target (Onsite computer)
-
-1. Gpedit.msc > Admin templates > Windows Components > Remote Desktop Services > Remote Desktop Session Host > Security > Require use of specific security layer… 
-Enable > RDP 
-
-2. Gpedit.msc > Windows Settings > Security Settings > Local Policies > User Rights Assignment > Allow logon through remote desktop services
-Add user to list
-
-3. Open Computer Management > Local Users and Groups > Groups > Remote Desktop Users > Add user here

@@ -1,0 +1,2 @@
+Go to URL: eservice.cerner.com
+Cerner password can found in IT Glue passwords section for MCHD

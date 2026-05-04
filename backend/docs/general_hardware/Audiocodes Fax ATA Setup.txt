@@ -1,2 +1,0 @@
-Ethernet connects from the wall to the WAN port on the ATA.
-Phone cable connects to port 1 on ATA and for Xerox printers, the other end connects to the Line port, not the Phone port. 

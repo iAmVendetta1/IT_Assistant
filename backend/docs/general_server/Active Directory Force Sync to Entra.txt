@@ -1,7 +1,0 @@
-Force active directory sync to Entra (Azure AD Sync)
-
-To perform the AD Sync Cycle, 
-
-1. Open Powershell.
-2. Paste the following command and press enter: 
-Start-ADSyncSyncCycle -PolicyType Delta

@@ -1,0 +1,247 @@
+TITLE: Windows Software Troubleshooting – Applications, Start Menu, Taskbar, Explorer
+VERSION: 1.0
+UPDATED: 2026-02-18
+
+============================================================
+SECTION 1 — APPLICATIONS NOT OPENING
+============================================================
+
+ISSUE: Application does not open when clicked.
+CAUSES:
+- Corrupt app cache.
+- Missing dependencies.
+- Blocked by antivirus.
+- Damaged installation.
+
+RESOLUTION:
+1. Run as Administrator:
+   - Right‑click application → Run as administrator.
+
+2. Check Task Manager:
+   - Ctrl + Shift + Esc → Processes tab.
+   - Look for the app running in background → End task → Try again.
+
+3. Clear app cache (UWP apps):
+   - Settings → Apps → Installed apps → Select app → Advanced options → Reset.
+
+4. Repair or reinstall:
+   - Settings → Apps → Installed apps → Select app → Modify/Repair.
+   - If unavailable: Uninstall → Reinstall.
+
+5. Check Event Viewer for errors:
+   - Right‑click Start → Event Viewer.
+   - Windows Logs → Application → look for Error entries related to the app.
+
+6. Check antivirus blocks:
+   - Open antivirus → Quarantine/Blocked items → Restore or whitelist app.
+
+7. Install missing dependencies:
+   - Install .NET Desktop Runtime, Visual C++ Redistributables, or DirectX if required.
+
+------------------------------------------------------------
+
+ISSUE: Application opens briefly then closes (crashes).
+CAUSES:
+- Corrupt user profile data.
+- GPU acceleration issues.
+- Outdated version.
+
+RESOLUTION:
+1. Launch app in safe mode (if supported).
+2. Disable hardware acceleration:
+   - App settings → Disable hardware acceleration (Chrome, Teams, Discord, etc.).
+3. Update application to latest version.
+4. Delete app data folder:
+   - %appdata%\AppName
+   - %localappdata%\AppName
+5. Reinstall application.
+
+============================================================
+SECTION 2 — START MENU NOT LOADING
+============================================================
+
+ISSUE: Start Menu does not open or is unresponsive.
+CAUSES:
+- Windows Explorer failure.
+- Corrupt Start Menu database.
+- Shell experience host issues.
+
+RESOLUTION:
+1. Restart Windows Explorer:
+   - Ctrl + Shift + Esc → Task Manager.
+   - Find “Windows Explorer” → Right‑click → Restart.
+
+2. Re-register Start Menu components:
+   - Open PowerShell as Administrator.
+   - Run:
+     Get-AppxPackage Microsoft.Windows.StartMenuExperienceHost | Reset-AppxPackage
+
+3. Run System File Checker:
+   - Command Prompt (Admin):
+     sfc /scannow
+
+4. Run DISM repair:
+   - Command Prompt (Admin):
+     DISM /Online /Cleanup-Image /RestoreHealth
+
+5. Create a new Windows user profile to test:
+   - Settings → Accounts → Family & other users → Add account.
+
+------------------------------------------------------------
+
+ISSUE: Start Menu tiles/apps missing.
+CAUSES:
+- Corrupt app registrations.
+- Damaged user profile.
+
+RESOLUTION:
+1. Re-register all Windows apps:
+   - PowerShell (Admin):
+     Get-AppxPackage -AllUsers | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+
+2. Reset Windows Store cache:
+   - Win + R → wsreset.exe → Enter.
+
+============================================================
+SECTION 3 — TASKBAR ISSUES
+============================================================
+
+ISSUE: Taskbar missing or unresponsive.
+CAUSES:
+- Windows Explorer crash.
+- Shell components not loading.
+- Corrupt user profile.
+
+RESOLUTION:
+1. Restart Windows Explorer:
+   - Ctrl + Shift + Esc → Task Manager → Windows Explorer → Restart.
+
+2. Restart Shell Experience Host:
+   - Task Manager → Details tab → ShellExperienceHost.exe → End task.
+   - It will auto-restart.
+
+3. Reset taskbar configuration:
+   - Delete:
+     %appdata%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar
+   - Restart Explorer.
+
+4. Rebuild icon cache:
+   - Command Prompt:
+     ie4uinit.exe -ClearIconCache
+
+============================================================
+SECTION 4 — WINDOWS EXPLORER FAILURES
+============================================================
+
+ISSUE: File Explorer not opening or crashing.
+CAUSES:
+- Corrupt Explorer cache.
+- Faulty context menu extensions.
+- Damaged system files.
+
+RESOLUTION:
+1. Restart Explorer:
+   - Task Manager → Windows Explorer → Restart.
+
+2. Clear Explorer history:
+   - Control Panel → File Explorer Options → General → Clear.
+
+3. Disable third‑party context menu handlers:
+   - Use “ShellExView” (if available) → Disable non‑Microsoft shell extensions.
+
+4. Run SFC/DISM:
+   - sfc /scannow
+   - DISM /Online /Cleanup-Image /RestoreHealth
+
+5. Reset folder view settings:
+   - File Explorer → View → Options → View → Reset Folders.
+
+============================================================
+SECTION 5 — WINDOWS SEARCH ISSUES
+============================================================
+
+ISSUE: Search bar not working or showing no results.
+CAUSES:
+- Search index corruption.
+- Cortana/SearchUI failure.
+
+RESOLUTION:
+1. Restart Search process:
+   - Task Manager → Details → SearchHost.exe → End task.
+
+2. Rebuild search index:
+   - Control Panel → Indexing Options → Advanced → Rebuild.
+
+3. Reset Windows Search:
+   - PowerShell (Admin):
+     Get-AppxPackage Microsoft.Windows.Search | Reset-AppxPackage
+
+============================================================
+SECTION 6 — WINDOWS STORE / UWP APP ISSUES
+============================================================
+
+ISSUE: Microsoft Store not opening.
+CAUSES:
+- Corrupt Store cache.
+- Damaged app registration.
+
+RESOLUTION:
+1. Reset Store cache:
+   - Win + R → wsreset.exe → Enter.
+
+2. Reinstall Microsoft Store:
+   - PowerShell (Admin):
+     Get-AppxPackage Microsoft.WindowsStore | Reset-AppxPackage
+
+3. Check date/time sync:
+   - Settings → Time & Language → Sync now.
+
+============================================================
+SECTION 7 — WINDOWS UPDATE ISSUES
+============================================================
+
+ISSUE: Updates failing to install.
+CAUSES:
+- Corrupt update cache.
+- Damaged system files.
+- Insufficient disk space.
+
+RESOLUTION:
+1. Clear Windows Update cache:
+   - Stop services:
+     net stop wuauserv
+     net stop bits
+   - Delete contents of:
+     C:\Windows\SoftwareDistribution
+   - Start services:
+     net start wuauserv
+     net start bits
+
+2. Run Windows Update Troubleshooter:
+   - Settings → Update & Security → Troubleshoot → Windows Update.
+
+3. Run SFC/DISM:
+   - sfc /scannow
+   - DISM /Online /Cleanup-Image /RestoreHealth
+
+============================================================
+SECTION 8 — LOGIN / PROFILE ISSUES
+============================================================
+
+ISSUE: User logs in to a temporary profile.
+CAUSES:
+- Corrupt user profile.
+- Registry profile list mismatch.
+
+RESOLUTION:
+1. Restart PC and try again.
+2. Check Event Viewer:
+   - Windows Logs → Application → User Profile Service errors.
+3. Create new user profile:
+   - Settings → Accounts → Family & other users → Add account.
+4. Migrate user data manually:
+   - Copy from C:\Users\OldProfile to C:\Users\NewProfile.
+
+============================================================
+END OF DOCUMENT
+============================================================

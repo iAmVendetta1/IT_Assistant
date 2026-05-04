@@ -1,2 +1,0 @@
-The following website can be used to check files for viruses:
-www.virustotal.com

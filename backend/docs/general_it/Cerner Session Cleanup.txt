@@ -1,0 +1,8 @@
+To clear a Cerner session, perform the following steps:
+
+1. Go to the following URL on the target workstation - https://cerncomi-auth.cernerworks.com/Citrix/PRODweb/#
+2. Click the dropdown box to select the impacted application. 
+3. Select the application in question. 
+4. Click Submit. 
+
+This may take several minutes to complete. 

@@ -1,2 +1,0 @@
-To fix, go to Phone System > Handsets > Search for the phone by MAC address instead of by Extension. 
-Then Delete additional Call Appearances from the list
