@@ -20,7 +20,7 @@ async def create_conversation(
     session: AsyncSession = Depends(get_session)
 ):
     # Always enforce a default title
-    default_title = title or f"Conversation – {datetime.now().strftime('%m/%d/%Y, %I:%M:%S %p')}"
+    default_title = title or f"New Conversation"
 
     convo = await crud.create_conversation(
         session,

@@ -38,6 +38,8 @@ function App() {
   const [conversations, setConversations] = useState({});
   const [activeId, setActiveId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState("");
 
   const chatRef = useRef(null);
 
@@ -194,6 +196,15 @@ function App() {
       }
     }));
 
+    // Auto‑rename conversation based on first user message
+    const currentTitle = conversations[conversationId]?.title || "";
+    if (currentTitle.startsWith("New Conversation")) {
+      const newTitle = generateTitleFromMessage(userMessage);
+      if (newTitle) {
+        renameConversation(conversationId, newTitle);
+      }
+    }
+
     // Save user message to backend
     await sendMessage(conversationId, "user", userMessage);
 
@@ -269,61 +280,87 @@ function App() {
           + New Conversation
         </button>
 
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5rem"
-          }}
-        >
+        {/* Conversations list */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
           {Object.entries(conversations).map(([id, convo]) => (
             <div
               key={id}
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0.75rem",
-                borderRadius: "6px",
+                padding: "0.5rem",
                 cursor: "pointer",
                 background: id === activeId ? "#1b2335" : "transparent",
-                border: id === activeId ? "1px solid rgba(255,255,255,0.2)" : "none"
+                borderRadius: "6px"
               }}
             >
-              <div
-                onClick={() => setActiveId(id)}
-                onDoubleClick={() => {
-                  const newTitle = prompt("Rename conversation:", convo.title);
-                  if (newTitle && newTitle.trim()) {
-                    renameConversation(id, newTitle.trim());
-                  }
-                }}
-                style={{ flex: 1 }}
-              >
-                {convo.title}
+              {/* LEFT SIDE: title or input */}
+              <div style={{ flex: 1 }}>
+                {editingId === id ? (
+                  <input
+                    autoFocus
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onBlur={() => {
+                      if (editingTitle.trim() && editingTitle !== convo.title) {
+                        renameConversation(id, editingTitle.trim());
+                      }
+                      setEditingId(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (editingTitle.trim() && editingTitle !== convo.title) {
+                          renameConversation(id, editingTitle.trim());
+                        }
+                        setEditingId(null);
+                      }
+                      if (e.key === "Escape") {
+                        setEditingId(null);
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      borderRadius: "4px",
+                      color: "white",
+                      padding: "2px 4px"
+                    }}
+                  />
+                ) : (
+                  <div
+                    onClick={() => setActiveId(id)}
+                    onDoubleClick={() => {
+                      setEditingId(id);
+                      setEditingTitle(convo.title);
+                    }}
+                  >
+                    {convo.title}
+                  </div>
+                )}
               </div>
 
+              {/* RIGHT SIDE: delete icon */}
               <div
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent selecting the conversation
+                  e.stopPropagation();
                   deleteConversation(id);
                 }}
                 style={{
                   marginLeft: "0.5rem",
                   color: "white",
                   cursor: "pointer",
-                  opacity: 0.7
+                  opacity: 0.7,
+                  pointerEvents: editingId === id ? "none" : "auto"
                 }}
               >
                 🗑️
               </div>
             </div>
           ))}
-
         </div>
       </div>
+
 
       {/* MAIN CHAT WINDOW */}
       <div
