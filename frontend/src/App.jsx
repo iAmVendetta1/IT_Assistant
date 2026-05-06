@@ -236,7 +236,7 @@ function App() {
         { role: "assistant", content: "Thinking..." }
       ];
 
-      // ✅ set index HERE (this is the key fix)
+      // set index HERE (this is the key fix)
       assistantIndexRef.current = newMessages.length - 1;
 
       return {
