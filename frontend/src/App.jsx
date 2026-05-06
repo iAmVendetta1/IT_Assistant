@@ -5,7 +5,8 @@ import {
   sendMessage,
   askQuestion,
   deleteConversationAPI,
-  renameConversationAPI
+  renameConversationAPI,
+  askQuestionStream
 } from "./api";
 
 import { useState, useRef, useEffect } from "react";
@@ -40,6 +41,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
+  
+  const assistantIndexRef = useRef(null);
 
   const chatRef = useRef(null);
 
@@ -179,65 +182,112 @@ function App() {
       }));
 
       setActiveId(conversationId);
+
+      // ✅ Allow React to commit the new conversation
+      await new Promise(r => setTimeout(r, 0));
     }
 
     const userMessage = question;
     setQuestion("");
 
-    // Add user message locally
-    setConversations(prev => ({
-      ...prev,
-      [conversationId]: {
-        ...prev[conversationId],
-        messages: [
-          ...prev[conversationId].messages,
-          { role: "user", content: userMessage }
-        ]
-      }
-    }));
+    // Add user message
+    setConversations(prev => {
+      const convo = prev[conversationId] || { messages: [] };
+      if (!convo) return prev;
 
-    // Auto‑rename conversation based on first user message
-    const currentTitle = conversations[conversationId]?.title || "";
-    if (currentTitle.startsWith("New Conversation")) {
+      return {
+        ...prev,
+        [conversationId]: {
+          ...convo,
+          messages: [
+            ...(convo.messages || []),
+            { role: "user", content: userMessage }
+          ]
+        }
+      };
+    });
+
+    // Save user message to db
+    await sendMessage(conversationId, "user", userMessage);
+
+    // Rename AFTER message is confirmed
+    setTimeout(() => {
       const newTitle = generateTitleFromMessage(userMessage);
       if (newTitle) {
         renameConversation(conversationId, newTitle);
       }
-    }
-
-    // Save user message to backend
-    await sendMessage(conversationId, "user", userMessage);
+    }, 0);
 
     setIsLoading(true);
 
-    // Ask backend for assistant response
-    const result = await askQuestion(conversationId, userMessage);
+    let assistantText = "";
+    assistantIndexRef.current = null;
+
+    // Allows React to settle the state updates for the user message before we start streaming the assistant response
+    await new Promise(r => setTimeout(r, 0));
+
+    // Add placeholder assistant message
+    setConversations(prev => {
+      const convo = prev[conversationId];
+      if (!convo) return prev;
+
+      const newMessages = [
+        ...convo.messages,
+        { role: "assistant", content: "Thinking..." }
+      ];
+
+      // ✅ set index HERE (this is the key fix)
+      assistantIndexRef.current = newMessages.length - 1;
+
+      return {
+        ...prev,
+        [conversationId]: {
+          ...convo,
+          messages: newMessages
+        }
+      };
+    });
+
+    // Stream tokens from backend
+    await askQuestionStream(conversationId, userMessage, (token) => {
+      // If first token, replace "Thinking..." instead of appending
+      if (assistantText === "") {
+        assistantText = token;
+      } else {
+        assistantText += token;
+      }
+
+      setConversations(prev => {
+        const convo = prev[conversationId];
+        if (!convo) return prev;
+
+        const msgs = [...convo.messages];
+        const idx = assistantIndexRef.current;
+
+        if (idx == null || idx >= msgs.length) return prev;
+
+        msgs[idx] = {
+          ...msgs[idx],
+          content: assistantText
+        };
+
+        return {
+          ...prev,
+          [conversationId]: {
+            ...convo,
+            messages: msgs
+          }
+        };
+      });
+    });
 
     setIsLoading(false);
 
-    // Add assistant message locally
-    setConversations(prev => ({
-      ...prev,
-      [conversationId]: {
-        ...prev[conversationId],
-        messages: [
-          ...prev[conversationId].messages,
-          {
-            role: "assistant",
-            content: result.answer,
-            meta: {
-              collection: result.collection,
-              sources: result.sources
-            }
-          }
-        ]
-      }
-    }));
-
-    // Save assistant message to backend
-    await sendMessage(conversationId, "assistant", result.answer);
+    // Save final assistant message (ONLY once)
+    if (assistantText.trim()) {
+      await sendMessage(conversationId, "assistant", assistantText);
+    }
   }
-
 
   // ------------------------------------------------------------
   // UI
@@ -418,25 +468,32 @@ function App() {
               gap: "1rem"
             }}
           >
-            {messages.map((msg, i) =>
-              msg.role === "user" ? (
-                <div key={i} style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <div
-                    style={{
-                      maxWidth: "80%",
-                      background: "#0078ff",
-                      color: "white",
-                      padding: "0.75rem 1rem",
-                      borderRadius: "16px",
-                      borderBottomRightRadius: "4px",
-                      fontSize: "0.95rem",
-                      lineHeight: "1.4"
-                    }}
-                  >
-                    {msg.content}
+            {messages.map((msg, i) => {
+              // ✅ Defensive guard
+              if (!msg || !msg.role) return null;
+
+              if (msg.role === "user") {
+                return (
+                  <div key={i} style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <div
+                      style={{
+                        maxWidth: "80%",
+                        background: "#0078ff",
+                        color: "white",
+                        padding: "0.75rem 1rem",
+                        borderRadius: "16px",
+                        borderBottomRightRadius: "4px",
+                        fontSize: "0.95rem",
+                        lineHeight: "1.4"
+                      }}
+                    >
+                      {msg.content}
+                    </div>
                   </div>
-                </div>
-              ) : (
+                );
+              }
+
+              return (
                 <div key={i} style={{ display: "flex", justifyContent: "flex-start" }}>
                   <div
                     style={{
@@ -450,7 +507,9 @@ function App() {
                       lineHeight: "1.5"
                     }}
                   >
-                    <div style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
+                    <div style={{ whiteSpace: "pre-wrap" }}>
+                      {msg.content}
+                    </div>
 
                     {msg.meta && (
                       <div
@@ -466,34 +525,14 @@ function App() {
 
                         <div style={{ marginTop: "0.25rem" }}>
                           <strong>Top 3 Sources:</strong>{" "}
-                          {msg.meta.sources.slice(0, 3).join(", ")}
+                          {(msg.meta?.sources || []).slice(0, 3).join(", ")}
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-              )
-            )}
-
-            {/* Thinking Indicator */}
-            {isLoading && (
-              <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                <div
-                  style={{
-                    maxWidth: "80%",
-                    background: "#0f141f",
-                    color: "#ffffff",
-                    padding: "0.75rem 1rem",
-                    borderRadius: "16px",
-                    borderBottomLeftRadius: "4px",
-                    fontSize: "0.95rem",
-                    lineHeight: "1.5"
-                  }}
-                >
-                  Thinking<ThinkingDots />
-                </div>
-              </div>
-            )}
+              );
+            })}
           </div>
 
           {/* Input Area */}
