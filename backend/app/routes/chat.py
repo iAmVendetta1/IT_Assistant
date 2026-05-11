@@ -10,10 +10,9 @@ from app.db import crud_conversations as crud
 from app.rag_pipeline import DCCAssistant
 from app.routing import route_collection
 from app.config import OLLAMA_URL, GENERATION_MODEL
+from app.dependencies import get_current_user
 
 router = APIRouter(tags=["Chat"])
-
-FAKE_USER = "local_dev_user"
 
 
 @router.post("/conversations/{conversation_id}/stream")
@@ -21,15 +20,15 @@ async def stream_answer(
     conversation_id: UUID,
     payload: dict,
     request: Request,
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
+    user_id: str = Depends(get_current_user)
 ):
     prompt = payload.get("prompt")
 
-    # Get conversation messages
     messages = await crud.get_messages(
         session,
         conversation_id,
-        user_id=FAKE_USER
+        user_id=user_id
     )
 
     formatted = [
