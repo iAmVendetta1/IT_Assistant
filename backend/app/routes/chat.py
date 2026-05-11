@@ -54,6 +54,11 @@ async def stream_answer(
         n_results=10
     )
 
+    if not chunks:
+        def no_context():
+            yield json.dumps({"response": "I don't have any information relevant to that question in my knowledge base."}) + "\n"
+        return StreamingResponse(no_context(), media_type="application/json")
+
     # Build prompt WITH context
     prompt_text = assistant._build_prompt(
         formatted,

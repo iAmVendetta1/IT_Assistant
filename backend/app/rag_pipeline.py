@@ -2,7 +2,7 @@ from typing import List, Dict
 import requests
 from app.ingestion.pipeline.embedder import embed
 
-from app.config import OLLAMA_URL, GENERATION_MODEL
+from app.config import OLLAMA_URL, GENERATION_MODEL, RETRIEVAL_DISTANCE_THRESHOLD
 from app.routing import route_collection
 
 from sqlalchemy import select
@@ -30,11 +30,24 @@ class DCCAssistant:
         query_embedding = embed([query])[0]
         results = collection.query(
             query_embeddings=[query_embedding],
-            n_results=n_results
+            n_results=n_results,
+            include=["documents", "metadatas", "distances"]
         )
         documents = results["documents"][0]
         metadatas = results["metadatas"][0]
-        return documents, metadatas
+        distances = results["distances"][0]
+
+        filtered = [
+            (doc, meta)
+            for doc, meta, dist in zip(documents, metadatas, distances)
+            if dist <= RETRIEVAL_DISTANCE_THRESHOLD
+        ]
+
+        if not filtered:
+            return [], []
+
+        docs, metas = zip(*filtered)
+        return list(docs), list(metas)
 
     # ---- Prompt building with history + context ----
     def _build_prompt(self, messages, context_chunks, latest_user):
@@ -48,17 +61,11 @@ class DCCAssistant:
         context_text = "\n\n---\n\n".join(context_chunks)
 
         prompt = f"""
-You are a helpful IT support assistant. Answer the user's question using ONLY the information provided in the context below.
+You are a helpful IT support assistant. Answer the user's question using ONLY the information provided in the context below. Do not add any information that is not present in the context.
 
-Use the context **only when it is relevant to the user's latest question**. 
-If the context contains unrelated information, ignore it.
+When the context contains a list, a sequence of steps, or a procedure, you MUST include every item in full — do not stop early, summarize, or skip any steps.
 
-Do NOT add extra details that the user did not ask for. 
-Do NOT answer questions that were not asked.
-
-Do not filter, omit, or reorganize information based on your interpretation.
-
-Preserve any structure from the context (lists, steps, procedures) exactly as it appears.
+Do not make editorial decisions about which parts of the context are relevant. If the context addresses the question, reproduce it completely and exactly as it appears.
 
 Conversation history:
 {history_text}
@@ -105,6 +112,13 @@ Answer:
 
         # 3. Retrieve chunks
         chunks, metadatas = self._retrieve_relevant_chunks(latest_user, collection, n_results=10)
+
+        if not chunks:
+            return {
+                "answer": "I don't have any information relevant to that question in my knowledge base.",
+                "collection": collection.name,
+                "sources": []
+            }
 
         # 4. Build prompt with history + context
         prompt = self._build_prompt(messages, chunks, latest_user)

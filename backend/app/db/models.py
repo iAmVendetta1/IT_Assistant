@@ -2,7 +2,7 @@ import uuid
 from sqlalchemy import Column, String, Text, Integer, ForeignKey, JSON, TIMESTAMP
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .database import Base
 
@@ -16,9 +16,8 @@ class Document(Base):
     source_id = Column(Text)
     raw_text = Column(Text, nullable=False)
     extra_metadata = Column(JSON, default={})
-    last_updated = Column(TIMESTAMP, default=datetime.utcnow)
+    last_updated = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    # NEW FIELDS
     client_id = Column(String, nullable=True)
     file_hash = Column(String, nullable=True)
 
@@ -35,12 +34,9 @@ class DocumentChunk(Base):
     embedding_vector_id = Column(String)
     extra_metadata = Column(JSON, default={})
 
-    # NEW FIELD
     client_id = Column(String, nullable=True)
 
     document = relationship("Document", back_populates="chunks")
-
-# Conversation + Message models (add to app/db/models.py)
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -48,7 +44,7 @@ class Conversation(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(String, nullable=False, index=True)
     title = Column(Text, nullable=True)
-    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     messages = relationship(
         "Message",
@@ -69,7 +65,7 @@ class Message(Base):
     user_id = Column(String, nullable=False, index=True)
     role = Column(String, nullable=False)  # "user" or "assistant"
     content = Column(Text, nullable=False)
-    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+    created_at = Column(TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     conversation = relationship("Conversation", back_populates="messages")
 

@@ -7,3 +7,4 @@ __pycache__/
 .env
 *.log
 .chromadb/
+backend/chroma_store/

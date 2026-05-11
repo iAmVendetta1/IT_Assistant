@@ -1,23 +1,38 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import chromadb
+import os
 
-from app.models import AskRequest, AnswerResponse
-from app.rag_pipeline import DCCAssistant
-
-from uuid import UUID
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.database import get_session
-from app.db import crud_conversations as crud
+load_dotenv()
 
 from app.routes.conversations import router as conversations_router
 from app.routes.ingestion import router as ingestion_router
 from app.routes.chat import router as chat_router
-from app.db.database import engine
-from app.db.models_ingestion import Base as IngestionBase
-from app.db.models import Base as ConversationBase
+from app.db.database import engine, Base
+import app.db.models  # noqa: F401 — registers ORM models with Base
+import app.db.models_ingestion  # noqa: F401 — registers ORM models with Base
+from app.config import CHROMA_PATH
+from app.routing import compute_centroids
+from app.rag_pipeline import DCCAssistant
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    chroma = chromadb.PersistentClient(path=str(CHROMA_PATH))
+    collections = {
+        col.name: chroma.get_or_create_collection(col.name, metadata={"hnsw:space": "cosine"})
+        for col in chroma.list_collections()
+    }
+    centroids = compute_centroids(collections)
+    app.state.assistant = DCCAssistant(collections, centroids)
+
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # Routers
 app.include_router(conversations_router)
@@ -25,44 +40,15 @@ app.include_router(ingestion_router)
 app.include_router(chat_router)
 
 # CORS
+allowed_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # dev
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(IngestionBase.metadata.create_all)
-        await conn.run_sync(ConversationBase.metadata.create_all)
-
-# Health check
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
-@app.post("/ask/{conversation_id}", response_model=AnswerResponse)
-async def ask_question(conversation_id: UUID, payload: AskRequest, session: AsyncSession = Depends(get_session)):
-    if not hasattr(app.state, "assistant"):
-        return AnswerResponse(
-            answer="The assistant is not initialized. Please run /ingest/all first.",
-            collection="none",
-            sources=[]
-        )
-
-    user_msg = payload.message
-
-    # Just call the assistant – no DB writes here
-    result = app.state.assistant.ask([
-        {"role": "user", "content": user_msg}
-    ])
-
-    return AnswerResponse(
-        answer=result["answer"],
-        collection=result["collection"],
-        sources=result["sources"]
-    )
-

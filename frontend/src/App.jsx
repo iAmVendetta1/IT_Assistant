@@ -43,6 +43,7 @@ function App() {
   const [editingTitle, setEditingTitle] = useState("");
   
   const assistantIndexRef = useRef(null);
+  const justCreatedRef = useRef(new Set());
 
   const chatRef = useRef(null);
 
@@ -79,6 +80,10 @@ function App() {
   useEffect(() => {
     async function load() {
       if (!activeId) return;
+      if (justCreatedRef.current.has(activeId)) {
+        justCreatedRef.current.delete(activeId);
+        return;
+      }
 
       try {
         const data = await fetchConversation(activeId);
@@ -181,6 +186,7 @@ function App() {
         }
       }));
 
+      justCreatedRef.current.add(conversationId);
       setActiveId(conversationId);
 
       // ✅ Allow React to commit the new conversation

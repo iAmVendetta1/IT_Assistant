@@ -9,3 +9,9 @@ fastapi
 uvicorn
 pydantic
 ipython
+sqlalchemy
+asyncpg
+greenlet
+python-multipart
+python-dotenv
+alembic
