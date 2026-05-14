@@ -1,5 +1,4 @@
 import numpy as np
-from app.ingestion.pipeline.processor import embed
 
 # ---------------------------------------
 # Keyword routing rules
@@ -63,7 +62,7 @@ def compute_centroids(collections):
 # ---------------------------------------
 # Route a question to the correct collection
 # ---------------------------------------
-def route_collection(question, collections, centroids):
+def route_collection(question, collections, centroids, q_emb):
     q = question.lower()
 
     # 1. Keyword routing
@@ -77,7 +76,6 @@ def route_collection(question, collections, centroids):
             return next(iter(collections.values()))
 
     # 2. Semantic routing
-    q_emb = np.array(embed([question])[0])
     best_collection = None
     best_score = -1
 

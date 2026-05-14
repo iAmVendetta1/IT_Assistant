@@ -26,8 +26,7 @@ class DCCAssistant:
         return resp.json()["response"]
 
     # ---- Retrieval ----
-    def _retrieve_relevant_chunks(self, query: str, collection, n_results: int = 10):
-        query_embedding = embed([query])[0]
+    def _retrieve_relevant_chunks(self, query_embedding, collection, n_results: int = 10):
         results = collection.query(
             query_embeddings=[query_embedding],
             n_results=n_results,
@@ -108,13 +107,16 @@ Answer:
                 "sources": []
             }
 
+        q_emb = embed([latest_user])[0]
+
         collection = route_collection(
             latest_user,
             self.collections,
-            self.centroids
+            self.centroids,
+            q_emb
         )
 
-        chunks, metadatas = self._retrieve_relevant_chunks(latest_user, collection)
+        chunks, metadatas = self._retrieve_relevant_chunks(q_emb, collection)
 
         if not chunks:
             return {
