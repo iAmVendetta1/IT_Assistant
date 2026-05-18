@@ -9,6 +9,7 @@ from app.db.database import get_session
 from app.db import crud_conversations as crud
 from app.rag_pipeline import DCCAssistant
 from app.routing import route_collection
+from app.ingestion.pipeline.embedder import embed
 from app.config import OLLAMA_URL, GENERATION_MODEL
 from app.dependencies import get_current_user
 
@@ -36,19 +37,23 @@ async def stream_answer(
         for m in messages
     ]
 
-    # Build prompt using YOUR pipeline logic
+    # Build prompt using pipeline logic
     assistant = request.app.state.assistant
+
+    # Embed query once, reuse for routing and retrieval
+    q_emb = embed([prompt])[0]
 
     # Route to correct collection
     collection = route_collection(
         prompt,
         assistant.collections,
-        assistant.centroids
+        assistant.centroids,
+        q_emb
     )
 
     # Retrieve relevant chunks FROM that collection
     chunks, metadatas = assistant._retrieve_relevant_chunks(
-        prompt,
+        q_emb,
         collection,
         n_results=10
     )
@@ -58,10 +63,11 @@ async def stream_answer(
             yield json.dumps({"response": "I don't have any information relevant to that question in my knowledge base."}) + "\n"
         return StreamingResponse(no_context(), media_type="application/json")
 
-    # Build prompt WITH context
+    # Build prompt with context
     prompt_text = assistant._build_prompt(
         formatted,
         chunks,
+        metadatas,
         prompt
     )
 
